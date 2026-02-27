@@ -1,0 +1,180 @@
+void ui_wifi_scanlist(void)
+{
+    uint16_t But_opt;
+
+    uint16_t line2disp = 0, nextline = 0;
+    uint8_t font = 30;
+    uint16_t old_offset, new_offset;
+    uint16_t display_list_size = 0;
+    uint16_t FT_DispWidth = EVE_HSIZE;
+    uint16_t FT_DispHeight = EVE_VSIZE;
+    uint32_t calc;
+
+    if (Flag.Key_Detect)
+    { // check if key is pressed
+        ESP_LOGI(TAG, "Flag.Key_Detect");
+        Flag.Key_Detect = 0; // clear it
+        if (Read_sfk >= SPECIAL_FUN)
+        { // check any special function keys are pressed
+            switch (Read_sfk)
+            {
+            case BACK_SPACE:
+                if (noofchars > 1) // check in the line there is any characters are present,cursor not include
+                {
+                    noofchars -= 1;                                                             // clear the character inthe buffer
+                    Disp_pos -= EVE_Rom_Font_WH(*(Buffer.notepad[Line] + noofchars - 1), Font); // Update the Disp_Pos
+                }
+                else
+                {
+                    if (Line >= (MAX_LINES - 1))
+                        Line--;
+                    else
+                        Line = 0;                                                      // check the lines
+                    noofchars = strlen(Buffer.notepad[Line]);                          // Read the len of the line
+                    for (tval = 0; tval < noofchars; tval++)                           // Compute the length of the Line
+                        Disp_pos += EVE_Rom_Font_WH(Buffer.notepad[Line][tval], Font); // Update the Disp_Pos
+                }
+                Buffer.temp = (Buffer.notepad[Line] + noofchars); // load into temporary buffer
+                Buffer.temp[-1] = '_';                            // update the string
+                Buffer.temp[0] = '\0';
+                break;
+
+            case CAPS_LOCK:
+                Flag.Caps ^= 1; // toggle the caps lock on when the key detect
+                break;
+
+            case NUMBER_LOCK:
+                Flag.Numeric ^= 1; // toggle the number lock on when the key detect
+                break;
+
+            case BACK:
+                for (tval = 0; tval < MAX_LINES; tval++)
+                    memset(&Buffer.notepad[tval], '\0', sizeof(Buffer.notepad[tval]));
+                Line = 0;                 // Starting line
+                Disp_pos = LINE_STARTPOS; // starting pos
+                //       Flag.Numeric = OFF;                             // Disable the numbers and spcial charaters
+                memset((Buffer.notepad[Line] + 0), '_', 1);                 // For Cursor
+                Disp_pos += EVE_Rom_Font_WH(Buffer.notepad[Line][0], Font); // Update the Disp_Pos
+                noofchars += 1;
+                break;
+            }
+        }
+        else
+        {
+            Disp_pos += EVE_Rom_Font_WH(Read_sfk, Font);                       // update dispos
+            Buffer.temp = Buffer.notepad[Line] + strlen(Buffer.notepad[Line]); // load into temporary buffer
+            Buffer.temp[-1] = Read_sfk;                                        // update the string
+            Buffer.temp[0] = '_';
+            Buffer.temp[1] = '\0';
+            noofchars = strlen(Buffer.notepad[Line]); // get the string len
+            if (Disp_pos > LINE_ENDPOS)               // check if there is place to put a character in a specific line
+            {
+                Buffer.temp = Buffer.notepad[Line] + (strlen(Buffer.notepad[Line]) - 1);
+                Buffer.temp[0] = '\0';
+                noofchars -= 1;
+                Disp_pos = LINE_STARTPOS;
+                Line++;
+                if (Line >= MAX_LINES)
+                    Line = 0;
+                memset((Buffer.notepad[Line]), '\0', sizeof(Buffer.notepad[Line])); // Clear the line buffer
+                for (; noofchars >= 1; noofchars--, tval++)
+                {
+                    if (Buffer.notepad[Line - 1][noofchars] == ' ' || Buffer.notepad[Line - 1][noofchars] == '.') // In case of space(New String) or end of statement(.)
+                    {
+                        memset(Buffer.notepad[Line - 1] + noofchars, '\0', 1);
+                        noofchars += 1; // Include the space
+                        memcpy(&Buffer.notepad[Line], (Buffer.notepad[Line - 1] + noofchars), tval);
+                        break;
+                    }
+                }
+                noofchars = strlen(Buffer.notepad[Line]);
+                Buffer.temp = Buffer.notepad[Line] + noofchars;
+                Buffer.temp[0] = '_';
+                Buffer.temp[1] = '\0';
+                for (tval = 0; tval < noofchars; tval++)
+                    Disp_pos += EVE_Rom_Font_WH(Buffer.notepad[Line][tval], Font); // Update the Disp_Pos
+            }
+        }
+    }
+
+    old_offset = EVE_report_cmdoffset(); /* used to calculate the amount of cmd-fifo bytes necessary */
+    display_list_size = EVE_memRead16(REG_CMD_DL);
+
+    EVE_start_cmd_burst(); /* start writing to the cmd-fifo as one stream of bytes, only sending the address once */
+
+    EVE_cmd_dl(CMD_DLSTART); /* start the display list */
+    EVE_cmd_dl(VERTEX_FORMAT(0));
+
+    EVE_cmd_dl(DL_CLEAR_RGB | BLACK);                   /* set the default clear color to white */
+    EVE_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG); /* clear the screen - this and the previous prevent artifacts between lists, Attributes are the color, stencil and tag buffers */
+
+    EVE_cmd_dl(TAG_MASK(1));
+    EVE_cmd_fgcolor(0x505050);
+    EVE_cmd_bgcolor(0x505050);
+
+    But_opt = (Read_sfk == BACK) ? EVE_OPT_FLAT : 0; // button color change if the button during press
+    EVE_cmd_dl(TAG(BACK));                           // Back		 Return to Home
+    EVE_cmd_button((FT_DispWidth * 0.855), (FT_DispHeight * 0.83), (FT_DispWidth * 0.146), (FT_DispHeight * KEY_V_SIZE), font, But_opt, "Clear");
+    But_opt = (Read_sfk == BACK_SPACE) ? EVE_OPT_FLAT : 0;
+    EVE_cmd_dl(TAG(BACK_SPACE)); // BackSpace
+    EVE_cmd_button((FT_DispWidth * 0.875), (FT_DispHeight * 0.70), (FT_DispWidth * 0.125), (FT_DispHeight * KEY_V_SIZE), font, But_opt, "<-");
+    But_opt = (Read_sfk == ' ') ? EVE_OPT_FLAT : 0;
+    EVE_cmd_dl(TAG(' ')); // Space
+    EVE_cmd_button((FT_DispWidth * 0.115), (FT_DispHeight * 0.83), (FT_DispWidth * 0.73), (FT_DispHeight * KEY_V_SIZE), font, But_opt, "Space");
+
+    if (Flag.Numeric == OFF)
+    {
+        EVE_cmd_keys(0, (FT_DispHeight * 0.442), FT_DispWidth, (FT_DispHeight * KEY_V_SIZE), font, Read_sfk, (Flag.Caps == ON ? "QWERTYUIOP" : "qwertyuiop"));
+        EVE_cmd_keys((FT_DispWidth * 0.042), (FT_DispHeight * 0.57), (FT_DispWidth * 0.96), (FT_DispHeight * KEY_V_SIZE), font, Read_sfk, (Flag.Caps == ON ? "ASDFGHJKL" : "asdfghjkl"));
+        EVE_cmd_keys((FT_DispWidth * 0.125), (FT_DispHeight * 0.70), (FT_DispWidth * 0.73), (FT_DispHeight * KEY_V_SIZE), font, Read_sfk, (Flag.Caps == ON ? "ZXCVBNM" : "zxcvbnm"));
+
+        But_opt = (Read_sfk == CAPS_LOCK) ? EVE_OPT_FLAT : 0;
+        EVE_cmd_dl(TAG(CAPS_LOCK)); // Capslock
+        EVE_cmd_button(0, (FT_DispHeight * 0.70), (FT_DispWidth * 0.10), (FT_DispHeight * KEY_V_SIZE), font, But_opt, "a^");
+        But_opt = (Read_sfk == NUMBER_LOCK) ? EVE_OPT_FLAT : 0;
+        EVE_cmd_dl(TAG(NUMBER_LOCK)); // Numberlock
+        EVE_cmd_button(0, (FT_DispHeight * 0.83), (FT_DispWidth * 0.10), (FT_DispHeight * KEY_V_SIZE), font, But_opt, "12*");
+    }
+
+    if (Flag.Numeric == ON)
+    {
+        EVE_cmd_keys((FT_DispWidth * 0), (FT_DispHeight * 0.442), FT_DispWidth, (FT_DispHeight * KEY_V_SIZE), font, Read_sfk, "1234567890");
+        EVE_cmd_keys((FT_DispWidth * 0.042), (FT_DispHeight * 0.57), (FT_DispWidth * 0.96), (FT_DispHeight * KEY_V_SIZE), font, Read_sfk, "-@#$%^&*(");
+        EVE_cmd_keys((FT_DispWidth * 0.125), (FT_DispHeight * 0.70), (FT_DispWidth * 0.73), (FT_DispHeight * KEY_V_SIZE), font, Read_sfk, ")_+[]{}");
+        But_opt = (Read_sfk == NUMBER_LOCK) ? EVE_OPT_FLAT : 0;
+        EVE_cmd_dl(TAG(253)); // Numberlock
+        EVE_cmd_button(0, (FT_DispHeight * 0.83), (FT_DispWidth * 0.10), (FT_DispHeight * KEY_V_SIZE), font, But_opt, "AB*");
+    }
+
+    EVE_cmd_dl(TAG_MASK(0)); // Disable the tag buffer updates
+    EVE_cmd_dl(SCISSOR_XY(0, 0));
+    EVE_cmd_dl(SCISSOR_SIZE(FT_DispWidth, (uint16_t)(FT_DispHeight * 0.405)));
+    EVE_cmd_dl(CLEAR_COLOR_RGB(255, 255, 255));
+    EVE_cmd_dl(CLEAR(1, 1, 1));
+    EVE_cmd_dl(COLOR_RGB(0, 0, 0)); // Text Color
+
+    line2disp = 0;
+    while (line2disp <= Line)
+    {
+        nextline = 3 + (line2disp * (FT_DispHeight * .073));
+        EVE_cmd_text(line2disp, nextline, font, 0, (const char *)&Buffer.notepad[line2disp]);
+        line2disp++;
+        // ESP_LOGI(TAG, "line = %d[%s]", line2disp, Buffer.notepad[line2disp]);
+    }
+
+    new_offset = EVE_report_cmdoffset();
+    if (old_offset > new_offset)
+    {
+        new_offset += 4096;
+    }
+    calc = new_offset - old_offset;
+    calc += 24; /* adjust for the commands that follow before the end */
+
+    EVE_cmd_dl(DL_DISPLAY); /* instruct the graphics processor to show the list */
+    EVE_cmd_dl(CMD_SWAP);   /* make this list active */
+
+    EVE_end_cmd_burst(); /* stop writing to the cmd-fifo */
+    EVE_cmd_start();     /* order the command co-processor to start processing its FIFO queue but do not wait for completion */
+
+    return;
+}

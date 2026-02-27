@@ -1,0 +1,89 @@
+#ifndef _INTRO_
+#define _INTRO_
+
+/*
+version info
+
+ver 0.99
+- 500g 분동 수정
+- 플러스 마이너스 1g 차이 무시 안정화 표시
+- 스케일벡터 0.1단위로 세분화
+- 오디오 삽입
+
+ver 1.00
+- 치팅 기능 삽입 cheattingtimeout 1 초단위 0은 무시 comlete에서 이전 값과 같은 값이 들어오면 치팅으로 간주 딜레이 시킴
+- start 화면 버그 fix
+ver 1.01
+- 한글 폰트 키우기 x3
+- 한글 메모리 한번만 쓰기
+
+ver 1.05
+- 8g 이하 일때 죽는 현상 수정 : Led 레벨 계산하는부분에서 0로 나누어서 죽음
+- 날짜오류 수정 달이 하나더
+- 10K 30K  500g 영점 모두 가능
+
+ver 1.06
+- 외부 스타트키 입력 프로그램
+- 마이너스 저울시 태그후 물건넣고 시작시 두번 클릭시까지 적용
+
+ver 1.07
+- LED 비정상 동작 -> 신호 두번 주는걸로 수정
+
+ver 1.10
+ - 60Kg 로드셀 추가
+
+ver 1.20A(2023.01.19)
+- auto_cal.txt  옵션 적용
+ 첫번째 (auto zero 조정 간격 8(1.2s), 16(2.4s), 32(4.8s), 64(9.6s) 시간 조정 디폴트 8)
+ 두번째 (영점의 범위 factor가 10g까지 기준 디폴터 20(0.5g) : 1(10) 2(5) 5(2) 10(1),20(0.5),30(0.33),40(0.25),50(0.2),100(0.1))
+- 측정값 반올림
+- 표시 안정화 범위 0.5g 조정
+- 로드셀 크기에 따라 버젼 A g 단위로 표기 B: Kg 단위
+
+ver 1.21B(2023.01.26)
+- sampling speed 150ms -> 100ms
+
+ver 1.22A(2023.01.26)
+- 저울 무게 limit 추가
+
+ver 1.30B(2023.02.10)
+- factor 외부파일로 설정
+
+ver 1.50B(2023.03.10)
+- 마이너스일때 0 칼리브레이션
+
+ver 2.10a(2023.07.29)
+- RFID 접촉불량 인식불량 수정
+- LED 우선순위 변경
+
+ver 3.00A(2023.02.25)
+- esp-idf 5.1.1 버젼으로 변경
+- RFID 하드웨어 SPI 로 변경
+- ethernet W5500 삭제
+
+ver 4.0A
+- 무게가 급격하게 변화할때 홀딩되는 현상 fix
+- 영점 조절과 용기 밖으로 빼기
+
+ver4.01
+- server.txt에 무결성 체크 삽입
+*/
+
+#define PROGMEM
+
+/*('file properties: ', 'resolution ', 237, 'x', 125, 'format ', 'RGB565', 'stride ', 474, ' total size ', 59250)*/
+
+typedef enum
+{
+    INTRO_NONE = 0,
+    INTRO_ENTER = 1
+} INTRO_EVENTS;
+
+void touch_calibrate(void);
+// void *introGuiStart(void (*touchcallback)(INTRO_EVENTS event), void (**closefunction)());
+void *introGuiStart(void (*touchcallback)(INTRO_EVENTS event));
+void IntroTouchCallback(INTRO_EVENTS event);
+void introDisplay(void);
+void introLoop(void);
+
+#endif

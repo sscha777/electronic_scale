@@ -58,4 +58,7 @@ dkms.conf
 ### Espresso ###
 *.esproj
 
+### ESP-IDF ###
+/build/
+
 # End of https://www.toptal.com/developers/gitignore/api/espresso,c

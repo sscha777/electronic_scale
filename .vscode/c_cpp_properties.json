@@ -4,10 +4,10 @@
       "name": "esp32",
       "includePath": [
         "${workspaceFolder}/**",
-        "i:/Espressif/frameworks/esp-idf-v5.3.1/components/**",
-        "i:/Espressif/frameworks/esp-idf-v5.3.1/components/driver/include/**",
+        "i:/.espressif/v5.5.3/esp-idf/components/**",
+        "i:/.espressif/v5.5.3/esp-idf/components/driver/include/**",
         "./esp-idf-lib/components/**",
-        "i:/Espressif/frameworks/esp-idf-v5.3.1/examples/common_components/protocol_examples_common/include/**"
+        "i:/.espressif/v5.5.3/esp-idf/examples/common_components/protocol_examples_common/include/**"
       ],
       "defines": [
         "_DEBUG",
@@ -15,7 +15,7 @@
         "_UNICODE"
       ],
       "configurationProvider": "ms-vscode.makefile-tools",
-      "compilerPath": "${config:idf.toolsPathWin}\\tools\\xtensa-esp-elf\\esp-14.2.0_20241119\\xtensa-esp-elf\\bin\\xtensa-esp32-elf-gcc.exe"
+      "compilerPath": "I:\\Espressif\\tools\\xtensa-esp-elf\\esp-14.2.0_20241119\\xtensa-esp-elf\\bin\\xtensa-esp32-elf-gcc.exe"
     }
   ],
   "version": 4

@@ -1,2 +1,3 @@
+# compile_commands.json 은 idf.py build 후 build/ 에 생성됩니다.
 CompileFlags:
-    Remove: [-f*, -m*]
+  CompilationDatabase: build

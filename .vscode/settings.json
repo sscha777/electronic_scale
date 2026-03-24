@@ -90,6 +90,7 @@
     "stdbool.h": "c"
   },
   "C_Cpp.errorSquiggles": "Disabled",
+  "C_Cpp.intelliSenseEngine": "disabled",
   "C_Cpp.dimInactiveRegions": false,
   "stm32.disableCubeProjectAutoDetection": true,
   "idf.monitorBaudRate": "115200",
@@ -98,11 +99,12 @@
   "idf.monitorUartParity": "None",
   "idf.monitorUartStopBits": "1",
   "idf.monitorUartFlowControl": "None",
-  "clangd.path": "i:\\Espressif\\tools\\esp-clang\\esp-19.1.2_20250312\\esp-clang\\bin\\clangd.exe",
+  "clangd.checkUpdates": false,
   "clangd.arguments": [
     "--background-index",
     "--query-driver=i:\\Espressif\\tools\\xtensa-esp-elf\\esp-14.2.0_20241119\\xtensa-esp-elf\\bin\\xtensa-esp32-elf-gcc.exe",
-    "--compile-commands-dir=e:\\Dropbox\\work\\electricScale\\Prog\\ElecScale_v2\\cursor\\Esp32smartSclev2_v0.0c\\build"
+    "--query-driver=c:\\Espressif\\tools\\xtensa-esp-elf\\esp-14.2.0_20241119\\xtensa-esp-elf\\bin\\xtensa-esp32-elf-gcc.exe",
+    "--compile-commands-dir=${workspaceFolder}/build"
   ],
   "idf.flashType": "UART",
   "idf.monitorPort": "COM11",
